@@ -3,7 +3,7 @@
 
 <head>
     <meta charset=utf-8 />
-    <title>Lesson 08 Template</title>
+    <title>Lab 08 Starter</title>
     <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
 
     <script src="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.js"></script>
@@ -55,56 +55,87 @@
 
 <body>
     <header>
-        <h1>Map Title</h1>
-        <h2>Map Subtitle</h2>
+        <h1>Power Plants generating Hydro-electricity</h1>
+        <h2>as an amount from total MWs generated</h2>
     </header>
 
     <div id='map'></div>
 
     <footer>
-        <p>Map authored by YOUR NAME</p>
-        <p>Additional information about the data and map goes here.</p>
+        <p>Map authored by Pat Smith</p>
+        <p>An exercise in learning how to work with geoJSON and Leaflet</p>
     </footer>
 
-    <script src="power-plants.js">
-        //  console.log(plants);
-    </script>
-
-
+    <script src="power-plants.js"></script>
     <script>
         var map = L.map('map', {
             center: [36, -94]
             , zoom: 4
         , });
 
-
-
         var tiles = L.tileLayer('http://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="http://cartodb.com/attributions">CartoDB</a>'
             , subdomains: 'abcd'
             , maxZoom: 19
         });
+
         tiles.addTo(map);
+
+        plants.features.sort(function (a, b) {
+            return b.properties.capacity_mw - a.properties.capacity_mw;
+        });
 
         L.geoJson(plants, {
             pointToLayer: function (feature, latlng) {
                 return L.circleMarker(latlng, {
-                    color: 'blue',
-                    weight: 1,
-                    fill: true,
-                    fillColor: 'blue',
-                  //  fillOpacity: .1,
-                    radius: 2
+                    color: 'blue'
+                    , weight: 1
+                    , fillColor: 'white'
+                    , fillOpacity: .8
+                    , radius: getRadius(feature.properties.capacity_mw)
+                        //   radius: feature.properties.capacity_mw * .01
                 });
             },
-       filter: function(feature, layer) {
-        if(feature.properties.capacity_mw > 1000 && 
-        feature.properties.fuel_source.Hydro){
-            return feature;   
+
+            filter: function (feature, layer) {
+                if (feature.properties.capacity_mw > 1000 &&
+                    feature.properties.fuel_source.Hydro) {
+                    return feature;
+                }
+            },
+
+
+            onEachFeature: function (feature, layer) {
+                layer.on('mouseover', function () {
+                    layer.setStyle({
+                        fillColor: 'red'
+                    });
+                });
+                layer.on('mouseout', function () {
+                    layer.setStyle({
+                        fillColor: 'white'
+                    });
+                });
+                layer.bindPopup("<b>" + feature.properties.plant_name + "</b>" + "<dd>" + "</dd>" + feature.properties.capacity_mw + " MW" + "<dd>" + "</dd>" + "<b>" + "Hydro: " + "</b>" + feature.properties.fuel_source.Hydro + " MW" + "<dd>" + "</dd>" + "<dd>" + "</dd>" + "<b>" + "Power Storage: " + "</b>" + (feature.properties.capacity_mw - feature.properties.fuel_source.Hydro) + " MW");
+
+
+            }
+        }).addTo(map);
+
+
+        //radius: getRadius(feature.properties.capacity_mw)  
+
+        function getRadius(area) {
+            var radius = Math.sqrt(area / Math.PI);
+            return radius * .6;
         }
-    }
-}
-        ).addTo(map);
+
+        //          filter: function(feature, layer) {
+        //        if(feature.properties.capacity_mw > 1000 && 
+        //        feature.properties.fuel_source.Hydro){
+        //            return feature;   
+        //        }
+        //    }
     </script>
 
 </body>
